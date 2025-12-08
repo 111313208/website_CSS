@@ -15,6 +15,12 @@
       .map {
         border: 3px solid #00ffdd;
         padding: 0;
+        width: 1000px;
+        height: 700px;
+      }
+      iframe {
+        width: 1000px;
+        height: 700px;
       }
 
       .section-title {
@@ -27,6 +33,16 @@
         margin-bottom: 40px;
         margin-right: 70px;
       }
+      @media (max-width: 375px) {
+        .map {
+          width: 300px;
+          height: 300px;
+        }
+        iframe {
+          width: 300px;
+          height: 300px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -34,8 +50,6 @@
     <div class="map">
       <iframe
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3615.2784024338266!2d121.54206247541927!3d25.02462437782254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3442a908a8232611%3A0xeebfb2d71a5025c7!2z5ZyL56uL6Ie65YyX5pWZ6IKy5aSn5a24!5e0!3m2!1szh-TW!2stw!4v1731827435609!5m2!1szh-TW!2stw"
-        width="1000px"
-        height="700px"
         style="border: 0"
         allowfullscreen=""
         loading="lazy"
