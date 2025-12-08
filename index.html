@@ -281,26 +281,14 @@
       #g-card {
         grid-template-columns: repeat(3, 1fr);
       }
-      @media (max-width: 375px) {
-        .Start_Page {
-          visibility: hidden;
-          display: none;
-        }
+      @media (max-width: 870px) {
         .myPicture {
           width: 100px;
           height: 100px;
           border-radius: 100px;
         }
-        video {
-          width: 350px;
-        }
-        #g-card {
-          grid-template-columns: repeat(1, 5fr);
-        }
-        .latest-experience-highlight {
-          visibility: hidden;
-          display: none;
-        }
+      }
+      @media (max-width: 720px) {
         .card {
           display: block;
           color: #e0e0e0;
@@ -313,18 +301,58 @@
           height: 80px;
           margin-left: 40px;
         }
-        .logo {
-          font-family: monospace;
-          font-size: 8px;
-          color: #00ffdd;
-          font-weight: 900;
-          letter-spacing: 2px;
-          border: 1px solid #00ffdd;
-          padding: 3px 6px;
+        #g-card {
+          grid-template-columns: repeat(2, 3fr);
         }
-        .experience-grid {
-          display: flex;
-          align-items: center;
+        video {
+          width: 400px;
+        }
+
+        @media (max-width: 375px) {
+          .Start_Page {
+            visibility: hidden;
+            display: none;
+          }
+          .myPicture {
+            width: 100px;
+            height: 100px;
+            border-radius: 100px;
+          }
+          video {
+            width: 350px;
+          }
+          #g-card {
+            grid-template-columns: repeat(1, 5fr);
+          }
+          .latest-experience-highlight {
+            visibility: hidden;
+            display: none;
+          }
+          .card {
+            display: block;
+            color: #e0e0e0;
+            font-size: 20px;
+            font-family: monospace;
+          }
+          .name {
+            border-left: 5px solid #00ffdd;
+            padding-left: 20px;
+            height: 80px;
+            margin-left: 40px;
+          }
+          .logo {
+            font-family: monospace;
+            font-size: 8px;
+            color: #00ffdd;
+            font-weight: 900;
+            letter-spacing: 2px;
+            border: 1px solid #00ffdd;
+            padding: 3px 6px;
+          }
+          .experience-grid {
+            display: flex;
+            align-items: center;
+          }
         }
       }
     </style>
