@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darren's Blog</title>
+    <style>
+      /* CSS Reset and Global Styles */
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        overflow-x: hidden;
+        font-size: 14px;
+        min-width: 790px;
+      }
+
+      a {
+        color: #00ffdd;
+        text-decoration: none;
+        transition: color 0.3s, border-color 0.3s;
+        font-weight: bold;
+      }
+
+      a:hover {
+        color: #ffffff;
+        border-bottom: 1px solid #00ffdd;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* --- Header & Navigation --- */
+      .header {
+        background-color: rgba(26, 26, 26, 0.95);
+        padding: 15px 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 2px solid #333;
+      }
+
+      .nav-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: monospace;
+        font-size: 24px;
+        color: #00ffdd;
+        font-weight: 900;
+        letter-spacing: 2px;
+        border: 1px solid #00ffdd;
+        padding: 5px 8px;
+      }
+
+      .nav-links {
+        display: flex;
+      }
+
+      .nav-links a {
+        padding: 0 15px;
+        font-size: 13px;
+        color: #e0e0e0;
+        text-transform: uppercase;
+      }
+
+      .nav-links a:hover {
+        color: #00ffdd;
+        border-bottom: 1px solid #00ffdd;
+      }
+
+      .Start_Page {
+        height: 68vh;
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+          url("../HTML-Personal Site/assets/images/星空の下の草原 (10).png");
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-bottom: 5px solid #333;
+      }
+
+      .Start_Page h1 {
+        font-size: 80px;
+        color: #fff;
+        margin: 0 0 10px 0;
+        letter-spacing: 5px;
+        text-shadow: 0 0 10px rgba(0, 255, 242, 0.5);
+        font-family: monospace;
+      }
+
+      .Start_Page h2 {
+        font-size: 24px;
+        color: #00ffdd;
+        margin: 0 0 40px 0;
+        letter-spacing: 3px;
+        border-bottom: 1px dashed #00ffdd;
+        padding-bottom: 5px;
+      }
+
+      .about_me-btn {
+        background: #00ffdd;
+        color: #1a1a1a;
+        padding: 15px 30px;
+        font-size: 18px;
+        text-transform: uppercase;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        clip-path: polygon(
+          0% 0%,
+          100% 0%,
+          100% 75%,
+          75% 100%,
+          0% 100%
+        ); /* Angled bottom right corner */
+        transition: background-color 0.3s;
+      }
+
+      .about_me-btn:hover {
+        background: #00ffdd;
+        color: #fff;
+      }
+
+      section {
+        padding: 80px 0;
+        border-bottom: 1px solid #333;
+      }
+
+      .section-title {
+        font-family: monospace;
+        font-size: 32px;
+        color: #00ffdd;
+        text-transform: uppercase;
+        border-left: 5px solid #00ffdd;
+        padding-left: 15px;
+        margin-bottom: 40px;
+      }
+
+      .experience-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 40px;
+      }
+
+      .latest-experience-highlight {
+        border: 1px solid #333;
+        padding: 20px;
+        background-color: #222;
+      }
+
+      .latest-experience-highlight h3 {
+        color: #00ffdd;
+        margin-top: 0;
+      }
+
+      .experience-tabs {
+        display: flex;
+        margin-bottom: 20px;
+      }
+
+      .experience-tabs button {
+        background: #333;
+        color: #e0e0e0;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        margin-right: 5px;
+        font-family: monospace;
+        clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 80% 100%, 0% 100%);
+        transition: background-color 0.3s;
+      }
+
+      .experience-tabs button:hover,
+      .experience-tabs .active {
+        background: #00ffdd;
+        color: #1a1a1a;
+      }
+
+      .experience-item {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dashed #333;
+        padding: 10px 0;
+      }
+
+      .experience-item-date {
+        color: #aaa;
+        font-family: monospace;
+        margin-right: 15px;
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        text-align: center;
+      }
+
+      .tech-card {
+        background-color: #222;
+        border: 2px solid #333;
+        padding: 30px 20px;
+        transition: all 0.3s;
+        clip-path: polygon(0% 10%, 100% 0%, 100% 90%, 0% 100%);
+      }
+
+      .tech-card:hover {
+        border-color: #00ffdd;
+        box-shadow: 0 0 15px rgba(0, 255, 242, 0.5);
+        transform: translateY(-5px);
+      }
+
+      .tech-card h4 {
+        color: #00ffdd;
+        margin-top: 0;
+        text-transform: uppercase;
+      }
+
+      .footer {
+        background-color: #111;
+        padding: 40px 0 20px;
+        font-size: 12px;
+        border-top: 5px solid #333;
+      }
+
+      .footer-content {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .footer-links a {
+        color: #aaa;
+        margin-right: 15px;
+        font-weight: normal;
+      }
+
+      .footer-links a:hover {
+        color: #00ffdd;
+        border-bottom: none;
+      }
+
+      audio {
+        color-scheme: dark;
+      }
+      .card {
+        display: flex;
+        color: #e0e0e0;
+        font-size: 40px;
+        font-family: monospace;
+      }
+      .name {
+        border-left: 5px solid #00ffdd;
+        padding-left: 20px;
+        height: 125px;
+      }
+      .myPicture {
+        border: #00ffdd solid 5px;
+        border-radius: 0px 100px;
+      }
+      .Introduction {
+        color: #e0e0e0;
+        margin: 30px;
+        font-size: 12px;
+      }
+      @media (max-width: 800px) {
+        .Start_Page {
+          visibility: hidden;
+          display: none;
+        }
+        .myPicture {
+          width: 100px;
+          height: 100px;
+          border-radius: 100px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="container nav-content">
+        <div class="logo">DARREN'S BLOG</div>
+        <nav class="nav-links">
+          <a href="#index">首頁</a>
+          <a href="#about_me">關於我</a>
+          <a href="#experience">學習經歷</a>
+          <a href="#Work">工作技能</a>
+          <a href="#gallery">作品一覽</a>
+          <a href="#more">更多資訊</a>
+          <a href="#connect">聯絡我</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="Start_Page" id="index">
+      <h2 style="font-family: monospace"></h2>
+      <h1>DARREN'S BLOG</h1>
+      <h2>郭岱倫的個人部落格</h2>
+      <button class="about_me-btn">個人簡介</button>
+      <div class="bla">
+        <p style="color: #666; margin-top: 20px">2025.12.8</p>
+        <p style="color: #666">
+          你是一名資科系學生，你讀資料結構到早上六點，你決定睡覺了。
+        </p>
+        <p style="color: #666">
+          但是你發現被子有點短，於是不斷的調整被子，可不管怎麼調整，被子總是短一截。
+        </p>
+        <p style="color: #666">你終於明白，讀了資科系，你這被子也就這樣了。</p>
+      </div>
+    </section>
+    <section id="about_me" class="container">
+      <div class="section-title">關於我</div>
+      <div class="card">
+        <img
+          class="myPicture"
+          src="assets/images/74_20250219153236-modified.png"
+          alt="頭貼"
+          width="180"
+        />
+        <div class="name" style="margin-left: 80px">
+          <p style="margin-top: 10px; margin-bottom: 10px">Darren</p>
+          <p style="font-size: 12px">
+            <a href="https://www.ntue.edu.tw/">國立台北教育大學</a> 學生
+          </p>
+        </div>
+        <article class="Introduction">
+          <p>
+            就讀國立臺北教育大學資科系二年級，興趣是畫畫、跑團以及玩電腦遊戲，最喜歡的學科是資訊，希望可以在大學四年學習到更多程式的相關知識。近期的目標是自己製作一個劇情遊戲並設計好劇情和角色，將自己的各種興趣整合起來。
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="experience" class="container">
+      <div class="section-title">學習經歷</div>
+
+      <div class="experience-grid">
+        <div class="latest-experience-highlight">
+          <h3 style="font-family: monospace">2025 /12 / 08</h3>
+          <p><strong>還在國北教資科系陰暗爬行</strong></p>
+          <p>
+            大二生活日記>>
+            <br />
+            <a href="#" style="color: #ccff00">READ MORE ></a>
+          </p>
+        </div>
+        <div>
+          <div class="experience-tabs">
+            <button class="active">大學</button>
+            <button>高中</button>
+            <button>國中</button>
+            <button>國小</button>
+          </div>
+          <div class="experience-list">
+            <div class="experience-item">
+              <span class="experience-item-date">2025 // 12 / 05</span>
+              <span>咖啡廳日常</span>
+              <a href="#">READ MORE ></a>
+            </div>
+            <div class="experience-item">
+              <span class="experience-item-date">2025 // 12 / 04</span>
+              <span>黃道學院團錄</span>
+              <a href="#">READ MORE ></a>
+            </div>
+            <div class="experience-item">
+              <span class="experience-item-date">2025 // 11 / 14</span>
+              <span>國北教大運動會</span>
+              <a href="#">READ MORE ></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="Work" class="container">
+      <div class="section-title">技能一覽</div>
+
+      <h3
+        style="
+          color: #00ffdd;
+          border-left: 3px solid #00ffdd;
+          padding-left: 10px;
+          font-family: monospace;
+        "
+      >
+        最佳技能
+      </h3>
+      <p>
+        <strong>「畫圖」</strong> 學習經歷超過8年?!水彩、素描、書法皆有涉略。
+      </p>
+
+      <br />
+      <h3
+        style="
+          color: #00ffdd;
+          border-left: 3px solid #00ffdd;
+          padding-left: 10px;
+          font-family: monospace;
+        "
+      >
+        更多技能
+      </h3>
+      <div class="card-grid">
+        <div class="tech-card">
+          <h4>寫程式</h4>
+          <p>還在學習中。</p>
+        </div>
+        <div class="tech-card">
+          <h4>跑團</h4>
+          <p>天天跑團，好玩遊戲!</p>
+        </div>
+        <div class="tech-card">
+          <h4>劇本設計</h4>
+          <p>咕咕咕。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="container">
+      <div class="section-title">作品介紹</div>
+
+      <h3 style="color: #00ffdd; font-family: monospace">圖片一覽</h3>
+      <div
+        id="g-card"
+        class="card-grid"
+        style="grid-template-columns: repeat(3, 1fr)"
+      >
+        <div class="tech-card">
+          <h4>AI生成圖片-布偶</h4>
+          <img
+            src="assets/images/Gemini_Generated_Image_2r9cra2r9cra2r9c.png"
+            alt="娃娃生成"
+            width="180"
+          />
+          <p></p>
+          <a href="#" style="color: #ccff00">VIEW NOW ></a>
+        </div>
+        <div class="tech-card">
+          <h4>ai生成圖片作業-風景</h4>
+          <img
+            src="assets/images/Gemini_Generated_Image_3wkfj93wkfj93wkf.png"
+            alt="ai生成圖片"
+            width="180"
+          />
+          <p></p>
+          <a href="#" style="color: #ccff00">VIEW NOW ></a>
+        </div>
+        <div class="tech-card">
+          <h4>影片素材拍攝</h4>
+          <img
+            src="assets/images/Screenshot_2025-10-28-16-46-54-43_c1ebbaff44ba152fb7f7c2e1f7129fd1.jpg"
+            alt="影片素材"
+            width="180"
+          />
+          <p></p>
+          <a href="#" style="color: #ccff00">VIEW NOW ></a>
+        </div>
+        <div class="tech-card">
+          <h4>電繪Q版人物</h4>
+          <img src="assets/images/IMG_1653.png" alt="圖畫" width="180" />
+          <p></p>
+          <a href="#" style="color: #ccff00">VIEW NOW ></a>
+        </div>
+        <div class="tech-card">
+          <h4>電繪Q版人物</h4>
+          <img src="assets/images/naruse_naru.png" alt="圖畫" width="180" />
+          <p></p>
+          <a href="#" style="color: #ccff00">VIEW NOW ></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <h3 style="color: #00ffdd; font-family: monospace">影片欣賞</h3>
+      <video
+        controls
+        width="600"
+        style="border: #00ffdd solid 1px; border-radius: 0px 30px"
+      >
+        <source
+          src="assets/vedio/多媒體期中-泰迪熊廣告.mp4"
+          type="audio/mpeg"
+        />
+      </video>
+    </section>
+
+    <section class="container">
+      <h3 style="color: #00ffdd; font-family: monospace">音訊欣賞</h3>
+      <audio controls>
+        <source
+          src="assets/audio/資二甲_111313208_郭岱倫_1013.mp3"
+          type="audio/mpeg"
+        />
+      </audio>
+    </section>
+
+    <section id="more" class="container">
+      <div class="section-title">更多內容</div>
+
+      <div class="card-grid">
+        <div class="tech-card">
+          <h4>國北教周邊地圖</h4>
+          <p style="font-family: monospace"></p>
+          <a href="map.html" style="color: #ccff00">VIEW MORE ></a>
+        </div>
+        <div class="tech-card">
+          <h4>點擊查看?</h4>
+          <p style="font-family: monospace"></p>
+          <a href="#" style="color: #ccff00">VIEW MORE ></a>
+        </div>
+        <div class="tech-card">
+          <h4>參考資料</h4>
+          <p style="font-family: monospace"></p>
+          <a href="source.html" style="color: #ccff00">VIEW MORE ></a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-links" id="connect">
+            <span style="color: #aaa">
+              聯絡我們:132ewesssd@gmail.com | 最後更新日期:2025年12月08日</span
+            >
+          </div>
+          <div style="text-align: right">
+            <span style="color: #00ffdd; font-weight: bold"
+              >國立台北教育大學</span
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
