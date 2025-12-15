@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROJECT: SCAVENGER V2.2</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #000;
+        font-family: "Courier New", Courier, monospace;
+        user-select: none;
+      }
+
+      /* CRT 掃描線效果 */
+      #crt-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(
+            rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.06),
+            rgba(0, 255, 0, 0.02),
+            rgba(0, 0, 255, 0.06)
+          );
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* 受傷紅屏特效 */
+      #damage-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle,
+          transparent 60%,
+          rgba(255, 0, 0, 0.5) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+        z-index: 9;
+      }
+
+      /* 學生資訊樣式 - 移至全域顯示 */
+      #student-info {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: #33ff33;
+        font-size: 10px; /* 字體縮小 */
+        font-weight: bold;
+        text-shadow: 0 0 5px #33ff33;
+        z-index: 100; /* 確保在最上層 (高於 start-screen 的 20) */
+        letter-spacing: 1px;
+        pointer-events: none;
+      }
+
+      /* UI 層 */
+      #ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        color: #33ff33;
+        text-shadow: 0 0 5px #33ff33;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 15px;
+        box-sizing: border-box;
+      }
+
+      #center-reticle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        background-color: #33ff33;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 4px #33ff33;
+        opacity: 0.8;
+        transition: width 0.1s, height 0.1s;
+      }
+
+      #interaction-text {
+        position: absolute;
+        top: 52%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 14px;
+        font-weight: bold;
+        display: none;
+        background-color: rgba(0, 0, 0, 0.8);
+        padding: 4px 8px;
+        border: 1px solid #33ff33;
+      }
+
+      .hud-panel {
+        background: rgba(0, 10, 0, 0.6);
+        border: 1px solid #33ff33;
+        padding: 10px;
+        max-width: 250px;
+        backdrop-filter: blur(2px);
+      }
+
+      /* 小地圖 */
+      #minimap-container {
+        position: absolute;
+        top: 30px; /* 稍微下移 */
+        right: 15px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 2px solid #33ff33;
+        background: rgba(0, 20, 0, 0.8);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #minimap {
+        width: 100%;
+        height: 100%;
+      }
+
+      h3 {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(51, 255, 51, 0.3);
+        padding-bottom: 2px;
+      }
+
+      p {
+        margin: 2px 0;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      #log-console {
+        height: 80px;
+        overflow-y: auto;
+        font-size: 11px;
+        margin-top: 5px;
+        padding-top: 2px;
+        color: #aaffaa;
+        scrollbar-width: thin;
+        scrollbar-color: #33ff33 #000;
+      }
+
+      .warning {
+        color: #ff3333;
+        text-shadow: 0 0 5px #ff3333;
+        animation: blink 0.5s infinite;
+      }
+      @keyframes blink {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      #start-screen,
+      #game-over-screen,
+      #win-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+        color: #33ff33;
+      }
+      #game-over-screen,
+      #win-screen {
+        display: none;
+        z-index: 30;
+      }
+
+      button {
+        background: #000;
+        color: #33ff33;
+        border: 1px solid #33ff33;
+        padding: 10px 20px;
+        font-family: "Courier New", monospace;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+        text-transform: uppercase;
+      }
+      button:hover {
+        background: #33ff33;
+        color: #000;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        border: 1px solid #33ff33;
+        margin-top: 3px;
+        background: #001100;
+      }
+      .progress-fill {
+        height: 100%;
+        background-color: #33ff33;
+        width: 0%;
+        transition: width 0.2s;
+      }
+
+      /* 血條特別樣式 */
+      #hp-bar-fill {
+        background-color: #ff3333;
+        box-shadow: 0 0 5px #ff0000;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="crt-overlay"></div>
+    <div id="damage-overlay"></div>
+
+    <!-- 學生資訊 (現在獨立出來了) -->
+    <div id="student-info">資科二 111313208 郭岱倫</div>
+
+    <!-- 開始畫面 -->
+    <div id="start-screen">
+      <h1 style="color: #33ff33; text-shadow: 0 0 10px #33ff33">
+        PROJECT: SCAVENGER
+      </h1>
+      <p>威脅等級: <span style="color: red">極高</span></p>
+      <p>任務: 收集 [數據硬碟] (100%) 並存活</p>
+      <br />
+      <p>[W,A,S,D] 移動 | [SHIFT] 奔跑</p>
+      <p>[E] 拾取/存放 | [滑鼠左鍵] 電擊攻擊</p>
+      <button id="start-btn">啟動戰鬥服</button>
+    </div>
+
+    <!-- 死亡畫面 -->
+    <div id="game-over-screen">
+      <h1 style="color: #ff3333">生命信號中斷</h1>
+      <p>你已被 [暗影哨兵] 清除。</p>
+      <button onclick="location.reload()">重啟模擬</button>
+    </div>
+
+    <!-- 通關畫面 -->
+    <div id="win-screen">
+      <h1 style="color: #87ceeb">模擬結束</h1>
+      <p>數據同步率: 100%</p>
+      <p>系統後門已開啟。歡迎回到現實。</p>
+      <button onclick="location.reload()">再次進入</button>
+    </div>
+
+    <div id="ui-layer" style="display: none">
+      <div class="hud-panel">
+        <h3>戰鬥服 V.2.0</h3>
+        <p>生命值 <span id="hp-val">100</span>%</p>
+        <div class="progress-bar">
+          <div id="hp-bar-fill" class="progress-fill" style="width: 100%"></div>
+        </div>
+        <p>體力 <span id="stamina-val">100</span>%</p>
+        <div class="progress-bar">
+          <div id="stamina-bar" class="progress-fill" style="width: 100%"></div>
+        </div>
+        <p>容量 <span id="weight-val">0</span>/4</p>
+      </div>
+
+      <div id="minimap-container">
+        <canvas id="minimap" width="150" height="150"></canvas>
+      </div>
+
+      <div id="center-reticle"></div>
+      <div id="interaction-text">[E] 拾取</div>
+
+      <div class="hud-panel" style="align-self: flex-end">
+        <h3>信號終端</h3>
+        <p>數據同步: <span id="progress-text">0%</span></p>
+        <div class="progress-bar">
+          <div id="game-progress-bar" class="progress-fill"></div>
+        </div>
+        <div id="log-console">
+          > 系統初始化...<br />
+          > 武器系統：電擊棒 [上線]<br />
+          > 警告：偵測到敵對生物反應。<br />
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+
+      // --- 核心變數 ---
+      let camera, scene, renderer, controls;
+      let moveForward = false,
+        moveBackward = false,
+        moveLeft = false,
+        moveRight = false;
+      let isSprinting = false;
+      let prevTime = performance.now();
+      let velocity = new THREE.Vector3();
+      let direction = new THREE.Vector3();
+
+      // 遊戲數值
+      let inventory = 0;
+      const maxInventory = 4;
+      let totalScrapCollected = 0;
+      const goalScrap = 20;
+      let hp = 100;
+      let stamina = 100;
+      let isGameActive = false;
+      let isGameOver = false;
+
+      // 戰鬥相關
+      let weapon;
+      let isAttacking = false;
+      const enemies = [];
+      const enemySpeed = 3.5; // 怪物速度
+      const enemyDetectionRange = 15; // 偵測範圍
+
+      // 物件與碰撞
+      const scraps = [];
+      const obstacles = [];
+      let raycaster;
+      const interactionDistance = 3;
+      let targetedObject = null;
+      const playerRadius = 0.5;
+
+      // 基地
+      const baseRadius = 5;
+
+      // 小地圖
+      const minimapCanvas = document.getElementById("minimap");
+      const minimapCtx = minimapCanvas.getContext("2d");
+      const minimapScale = 2.5;
+
+      // 素材
+      const scrapGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.3);
+      const scrapMaterial = new THREE.MeshStandardMaterial({
+        color: 0x00ff00,
+        emissive: 0x004400,
+        roughness: 0.3,
+        metalness: 0.8,
+      });
+      // 怪物素材
+      const enemyGeo = new THREE.DodecahedronGeometry(0.6);
+      const enemyMat = new THREE.MeshStandardMaterial({
+        color: 0x550000,
+        emissive: 0xaa0000,
+        emissiveIntensity: 2,
+        roughness: 0.2,
+      });
+
+      // 劇情
+      const storyLogs = [
+        {
+          threshold: 1,
+          text: "日誌 #1: 這些數據顯示公司早就知道這裡有東西。他們派我們下來只是為了餵這些... 怪物。",
+        },
+        {
+          threshold: 8,
+          text: "日誌 #5: 它們畏懼強光，但我的手電筒快沒電了。電擊棒是唯一的防衛手段。",
+        },
+        {
+          threshold: 15,
+          text: "日誌 #9: 收集到75%了。天空開始出現裂痕... 那不是極光，那是螢幕壞點。",
+        },
+        {
+          threshold: 20,
+          text: "系統: 數據同步完成 (100%)。請立即返回基地上傳並撤離。",
+        },
+      ];
+      let currentLogIndex = 0;
+
+      init();
+      animate();
+
+      function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020202);
+        scene.fog = new THREE.FogExp2(0x051015, 0.08);
+
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera.position.y = 1.7;
+
+        // 武器 (右手電擊棒)
+        createWeapon();
+
+        const moonLight = new THREE.DirectionalLight(0x445566, 0.5);
+        moonLight.position.set(50, 100, 50);
+        scene.add(moonLight);
+
+        const ambientLight = new THREE.AmbientLight(0x111111);
+        scene.add(ambientLight);
+
+        // 手電筒
+        const flashLight = new THREE.SpotLight(
+          0xffffff,
+          15,
+          40,
+          Math.PI / 5,
+          0.5,
+          1
+        );
+        flashLight.position.set(0, 0, 0);
+        flashLight.target.position.set(0, 0, -1);
+        camera.add(flashLight);
+        camera.add(flashLight.target);
+        scene.add(camera);
+
+        // 基地
+        const baseLight = new THREE.PointLight(0xffff00, 3, 15);
+        baseLight.position.set(0, 3, 0);
+        scene.add(baseLight);
+
+        // 基地光柱
+        const beamGeo = new THREE.CylinderGeometry(0.2, 0.2, 200, 8);
+        beamGeo.translate(0, 100, 0);
+        const beamMat = new THREE.MeshBasicMaterial({
+          color: 0xffff00,
+          transparent: true,
+          opacity: 0.15,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        scene.add(beam);
+
+        const baseGeo = new THREE.BoxGeometry(6, 4, 6);
+        const baseEdges = new THREE.EdgesGeometry(baseGeo);
+        const baseMat = new THREE.LineBasicMaterial({ color: 0xffff00 });
+        const baseZone = new THREE.LineSegments(baseEdges, baseMat);
+        baseZone.position.y = 2;
+        scene.add(baseZone);
+
+        // 地面
+        const floorGeometry = new THREE.PlaneGeometry(300, 300);
+        floorGeometry.rotateX(-Math.PI / 2);
+        const floorMaterial = new THREE.MeshStandardMaterial({
+          color: 0x1a221a,
+          roughness: 1.0,
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        scene.add(floor);
+
+        generateEnvironment();
+        generateScraps(35);
+        generateEnemies(15); // 生成 15 隻怪物
+
+        renderer = new THREE.WebGLRenderer({ antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        controls = new PointerLockControls(camera, document.body);
+
+        const startBtn = document.getElementById("start-btn");
+        startBtn.addEventListener("click", () => controls.lock());
+
+        controls.addEventListener("lock", () => {
+          document.getElementById("start-screen").style.display = "none";
+          document.getElementById("ui-layer").style.display = "flex";
+          isGameActive = true;
+        });
+
+        controls.addEventListener("unlock", () => {
+          if (!isGameOver && totalScrapCollected < goalScrap) {
+            document.getElementById("start-screen").style.display = "flex";
+            document.getElementById("ui-layer").style.display = "none";
+            document.querySelector("#start-screen h1").innerText = "連線中斷";
+            document.querySelector("#start-btn").innerText = "重新連線";
+            isGameActive = false;
+          }
+        });
+
+        document.addEventListener("keydown", onKeyDown);
+        document.addEventListener("keyup", onKeyUp);
+        document.addEventListener("mousedown", onAttack); // 攻擊事件
+        window.addEventListener("resize", onWindowResize);
+        raycaster = new THREE.Raycaster();
+      }
+
+      function createWeapon() {
+        // 簡單的電擊棒模型
+        const stickGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.6, 8);
+        const handleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8);
+        const tipGeo = new THREE.BoxGeometry(0.08, 0.08, 0.15);
+
+        const stickMat = new THREE.MeshStandardMaterial({
+          color: 0x333333,
+          metalness: 0.8,
+          roughness: 0.2,
+        });
+        const tipMat = new THREE.MeshStandardMaterial({
+          color: 0x5555ff,
+          emissive: 0x2222ff,
+        });
+
+        const stick = new THREE.Mesh(stickGeo, stickMat);
+        const handle = new THREE.Mesh(handleGeo, stickMat);
+        const tip = new THREE.Mesh(tipGeo, tipMat);
+
+        stick.rotation.x = -Math.PI / 2;
+        handle.rotation.x = -Math.PI / 2;
+        handle.position.z = 0.3;
+        tip.position.z = -0.3;
+
+        weapon = new THREE.Group();
+        weapon.add(stick);
+        weapon.add(handle);
+        weapon.add(tip);
+
+        // 放置在右下角
+        weapon.position.set(0.4, -0.3, -0.6);
+        weapon.rotation.set(0.2, -0.2, 0);
+
+        camera.add(weapon);
+      }
+
+      function onAttack(event) {
+        if (!isGameActive || isAttacking || isGameOver) return;
+        if (event.button !== 0) return; // 只接受左鍵
+
+        isAttacking = true;
+
+        // 1. 視覺動畫 (突刺)
+        const initialPos = weapon.position.clone();
+        const initialRot = weapon.rotation.clone();
+        const targetPos = new THREE.Vector3(0.2, -0.2, -1.0); // 向前刺
+        const targetRot = new THREE.Euler(0.5, -0.5, -0.5);
+
+        let progress = 0;
+        const attackSpeed = 0.15; // 速度
+
+        function animateAttack() {
+          progress += attackSpeed;
+          if (progress <= 1) {
+            weapon.position.lerp(targetPos, 0.2);
+            weapon.rotation.x = THREE.MathUtils.lerp(
+              initialRot.x,
+              targetRot.x,
+              0.2
+            );
+            requestAnimationFrame(animateAttack);
+          } else {
+            returnWeapon();
+          }
+        }
+
+        function returnWeapon() {
+          // 復位
+          let returnProgress = 0;
+          function animateReturn() {
+            returnProgress += 0.1;
+            if (returnProgress <= 1) {
+              weapon.position.lerp(initialPos, 0.2);
+              weapon.rotation.x = THREE.MathUtils.lerp(
+                targetRot.x,
+                initialRot.x,
+                0.2
+              );
+              requestAnimationFrame(animateReturn);
+            } else {
+              isAttacking = false;
+              weapon.position.copy(initialPos);
+              weapon.rotation.copy(initialRot);
+            }
+          }
+          animateReturn();
+        }
+
+        animateAttack();
+
+        // 2. 傷害判定 (射線檢測前方)
+        raycaster.setFromCamera(new THREE.Vector2(), camera);
+        const hits = raycaster.intersectObjects(enemies.map((e) => e.mesh));
+
+        if (hits.length > 0 && hits[0].distance < 3.0) {
+          // 擊中怪物
+          const enemyObj = hits[0].object;
+          const enemyIndex = enemies.findIndex((e) => e.mesh === enemyObj);
+          if (enemyIndex !== -1) {
+            const enemy = enemies[enemyIndex];
+            enemy.hp -= 40; // 傷害
+            // 擊退
+            const pushDir = enemy.mesh.position
+              .clone()
+              .sub(camera.position)
+              .normalize();
+            enemy.mesh.position.add(pushDir.multiplyScalar(2.0));
+
+            // 特效：閃白光
+            enemy.mesh.material.emissive.setHex(0xffffff);
+            setTimeout(
+              () => enemy.mesh.material.emissive.setHex(0xaa0000),
+              100
+            );
+
+            logMessage(">> 目標擊中！", false);
+
+            if (enemy.hp <= 0) {
+              scene.remove(enemy.mesh);
+              enemies.splice(enemyIndex, 1);
+              logMessage(">> 威脅已清除。");
+            }
+          }
+        }
+      }
+
+      function generateEnemies(count) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 30 + Math.random() * 80; // 距離基地遠一點
+          const x = Math.cos(angle) * dist;
+          const z = Math.sin(angle) * dist;
+
+          const mesh = new THREE.Mesh(enemyGeo, enemyMat.clone()); // Clone material for individual flashing
+          mesh.position.set(x, 1.5, z); // 浮在半空
+
+          // 加入一點隨機浮動動畫屬性
+          mesh.userData = {
+            floatOffset: Math.random() * 100,
+            bobSpeed: 1 + Math.random(),
+          };
+
+          scene.add(mesh);
+          enemies.push({
+            mesh: mesh,
+            hp: 100,
+            state: "idle", // idle, chase
+            lastPos: new THREE.Vector3(x, 1.5, z),
+          });
+        }
+      }
+
+      function updateEnemies(delta) {
+        const playerPos = camera.position;
+
+        enemies.forEach((enemy) => {
+          const dist = enemy.mesh.position.distanceTo(playerPos);
+
+          // 1. 浮動動畫
+          const time = performance.now() / 1000;
+          // FIX: userData is on the mesh, not the wrapper object
+          enemy.mesh.position.y =
+            1.5 +
+            Math.sin(
+              time * enemy.mesh.userData.bobSpeed +
+                enemy.mesh.userData.floatOffset
+            ) *
+              0.3;
+          enemy.mesh.rotation.y += 1 * delta;
+
+          // 2. AI 邏輯
+          if (dist < enemyDetectionRange && dist > 1.5) {
+            // 追逐玩家 (除非玩家在基地)
+            const distToBase = playerPos.distanceTo(new THREE.Vector3(0, 0, 0));
+            if (distToBase > baseRadius) {
+              enemy.state = "chase";
+              const dir = playerPos
+                .clone()
+                .sub(enemy.mesh.position)
+                .normalize();
+
+              // 簡單的避障 (如果撞到障礙物就停住)
+              const nextPos = enemy.mesh.position
+                .clone()
+                .add(dir.multiplyScalar(enemySpeed * delta));
+              if (!checkCollision(nextPos, 1.0)) {
+                enemy.mesh.position.copy(nextPos);
+              }
+            } else {
+              enemy.state = "idle"; // 玩家在安全區
+            }
+          } else {
+            enemy.state = "idle";
+          }
+
+          // 3. 攻擊玩家
+          if (dist < 1.5) {
+            takeDamage(10 * delta); // 持續傷害
+          }
+        });
+      }
+
+      function takeDamage(amount) {
+        if (isGameOver) return;
+        hp = Math.max(0, hp - amount);
+
+        // UI 更新
+        document.getElementById("hp-val").innerText = Math.floor(hp);
+        document.getElementById("hp-bar-fill").style.width = hp + "%";
+
+        // 紅屏特效
+        const overlay = document.getElementById("damage-overlay");
+        overlay.style.opacity = 1;
+        setTimeout(() => (overlay.style.opacity = 0), 300);
+
+        if (hp <= 0) {
+          triggerGameOver();
+        }
+      }
+
+      function triggerGameOver() {
+        isGameOver = true;
+        isGameActive = false;
+        controls.unlock();
+        document.getElementById("ui-layer").style.display = "none";
+        document.getElementById("game-over-screen").style.display = "flex";
+      }
+
+      function triggerWin() {
+        isGameOver = true;
+        isGameActive = false;
+        controls.unlock();
+        document.getElementById("ui-layer").style.display = "none";
+        document.getElementById("win-screen").style.display = "flex";
+      }
+
+      function generateEnvironment() {
+        // ... (與之前相同) ...
+        for (let i = 0; i < 80; i++) {
+          const x = (Math.random() - 0.5) * 200;
+          const z = (Math.random() - 0.5) * 200;
+          if (Math.abs(x) < 10 && Math.abs(z) < 10) continue;
+          createTree(x, z);
+        }
+        for (let i = 0; i < 40; i++) {
+          const x = (Math.random() - 0.5) * 150;
+          const z = (Math.random() - 0.5) * 150;
+          if (Math.abs(x) < 8 && Math.abs(z) < 8) continue;
+          createRock(x, z);
+        }
+        const lakeGeo = new THREE.CircleGeometry(25, 32);
+        lakeGeo.rotateX(-Math.PI / 2);
+        const lakeMat = new THREE.MeshStandardMaterial({
+          color: 0x113344,
+          transparent: true,
+          opacity: 0.8,
+          roughness: 0.1,
+        });
+        const lake = new THREE.Mesh(lakeGeo, lakeMat);
+        lake.position.set(60, 0.1, -60);
+        scene.add(lake);
+        obstacles.push({
+          position: new THREE.Vector2(60, -60),
+          radius: 24,
+          type: "lake",
+        });
+
+        const hillGeo = new THREE.SphereGeometry(30, 32, 16);
+        const hillMat = new THREE.MeshStandardMaterial({ color: 0x0f140f });
+        const hillPositions = [
+          { x: -70, z: -70 },
+          { x: 80, z: 50 },
+          { x: -50, z: 80 },
+        ];
+        hillPositions.forEach((pos) => {
+          const hill = new THREE.Mesh(hillGeo, hillMat);
+          hill.position.set(pos.x, -20, pos.z);
+          hill.scale.set(1.5, 0.8, 1.5);
+          scene.add(hill);
+          obstacles.push({
+            position: new THREE.Vector2(pos.x, pos.z),
+            radius: 25,
+            type: "hill",
+          });
+        });
+      }
+
+      function createTree(x, z) {
+        const scale = 0.8 + Math.random() * 0.6;
+        const trunkGeo = new THREE.CylinderGeometry(
+          0.4 * scale,
+          0.6 * scale,
+          4 * scale,
+          8
+        );
+        const trunk = new THREE.Mesh(
+          trunkGeo,
+          new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 1.0 })
+        );
+        trunk.position.set(x, 2 * scale, z);
+        scene.add(trunk);
+        const leavesGeo = new THREE.ConeGeometry(2.5 * scale, 6 * scale, 8);
+        const leaves = new THREE.Mesh(
+          leavesGeo,
+          new THREE.MeshStandardMaterial({ color: 0x0f2e0f, roughness: 0.9 })
+        );
+        leaves.position.set(x, 5 * scale, z);
+        scene.add(leaves);
+        obstacles.push({
+          position: new THREE.Vector2(x, z),
+          radius: 0.8 * scale,
+          type: "tree",
+        });
+      }
+
+      function createRock(x, z) {
+        const size = 0.5 + Math.random() * 1.5;
+        const rockGeo = new THREE.DodecahedronGeometry(size, 0);
+        const rock = new THREE.Mesh(
+          rockGeo,
+          new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7 })
+        );
+        rock.position.set(x, size * 0.6, z);
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        scene.add(rock);
+        obstacles.push({
+          position: new THREE.Vector2(x, z),
+          radius: size,
+          type: "rock",
+        });
+      }
+
+      function generateScraps(count) {
+        let attempts = 0;
+        for (let i = 0; i < count; i++) {
+          attempts++;
+          if (attempts > 500) break;
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 10 + Math.random() * 80;
+          const x = Math.cos(angle) * dist;
+          const z = Math.sin(angle) * dist;
+          if (!checkCollision({ x, z }, 1)) {
+            const mesh = new THREE.Mesh(scrapGeometry, scrapMaterial);
+            mesh.position.set(x, 0.15, z);
+            mesh.rotation.y = Math.random() * Math.PI;
+            scene.add(mesh);
+            scraps.push(mesh);
+          } else {
+            i--;
+          }
+        }
+      }
+
+      function checkCollision(pos, extraRadius = 0) {
+        const pos2D = new THREE.Vector2(pos.x, pos.z || pos.y); // Handle both Vec3 and Vec2
+        for (const obs of obstacles) {
+          if (
+            pos2D.distanceTo(obs.position) <
+            obs.radius + playerRadius + extraRadius
+          )
+            return true;
+        }
+        return false;
+      }
+
+      function updateMinimap() {
+        minimapCtx.clearRect(0, 0, 150, 150);
+        minimapCtx.save();
+        minimapCtx.translate(75, 75);
+
+        // 讓地圖旋轉 (Head-Up)
+        const playerRotation = controls.getObject().rotation.y;
+        minimapCtx.rotate(playerRotation);
+
+        const px = camera.position.x;
+        const pz = camera.position.z;
+
+        // 1. 繪製基地
+        const baseX = (0 - px) * minimapScale;
+        const baseZ = (0 - pz) * minimapScale;
+        minimapCtx.fillStyle = "#ffff00";
+        minimapCtx.fillRect(baseX - 3, baseZ - 3, 6, 6);
+
+        // 2. 繪製數據 (綠)
+        minimapCtx.fillStyle = "#00ff00";
+        for (const scrap of scraps) {
+          const sx = (scrap.position.x - px) * minimapScale;
+          const sz = (scrap.position.z - pz) * minimapScale;
+          if (Math.abs(sx) < 75 && Math.abs(sz) < 75) {
+            minimapCtx.beginPath();
+            minimapCtx.arc(sx, sz, 2, 0, Math.PI * 2);
+            minimapCtx.fill();
+          }
+        }
+
+        // 3. 繪製怪物 (紅)
+        minimapCtx.fillStyle = "#ff0000";
+        for (const enemy of enemies) {
+          const ex = (enemy.mesh.position.x - px) * minimapScale;
+          const ez = (enemy.mesh.position.z - pz) * minimapScale;
+          if (Math.abs(ex) < 75 && Math.abs(ez) < 75) {
+            minimapCtx.beginPath();
+            minimapCtx.arc(ex, ez, 3, 0, Math.PI * 2);
+            minimapCtx.fill();
+          }
+        }
+
+        // 4. 指南針修正：直接指向旋轉後坐標系中的基地位置
+        // 在 Head-Up 地圖中，基地相對玩家的位置就是 (baseX, baseZ)
+        // 所以我們不需要再做反向旋轉計算，直接畫一個指向 (baseX, baseZ) 的箭頭即可
+
+        // 計算箭頭角度 (在地圖坐標系中)
+        // Math.atan2(y, x) -> 在 Canvas 中是 Math.atan2(z, x)
+        const angleOnMap = Math.atan2(baseZ, baseX);
+
+        // 繪製指南針 (只在還原旋轉前繪製，這樣它會跟著地圖轉，這不對)
+        // 指南針應該是固定的 UI，指示"基地在哪個方向"。
+        // 但如果地圖本身在轉，基地圖示也在轉。
+        // 使用者的要求是 "指向地圖上的基地"。
+        // 所以我們應該畫一條線或箭頭，從中心指向基地圖示。
+
+        minimapCtx.restore(); // 恢復畫布旋轉，現在坐標系是固定的 (上=螢幕上方)
+
+        // --- 繪製指南針 (修復版) ---
+        // 因為我們剛剛 restore 了，現在要算出基地在螢幕空間(相對於小地圖中心)的角度
+        // 玩家面對的方向是 -Z (在 Three.js)，對應 Canvas 的上方 (-Y)
+        // 我們需要計算：基地相對於玩家的世界角度 +玩家的旋轉角度
+
+        const dx = 0 - px;
+        const dz = 0 - pz;
+        // 算出世界角度 (0度是+X, 90度是+Z)
+        let worldAngle = Math.atan2(dz, dx);
+        // 修正 Three.js 坐標系差異 (-Z 為前)
+        // 其實最簡單的方法：利用剛剛旋轉過的 baseX, baseZ
+        // baseX, baseZ 是基地在"以玩家為中心、玩家面向為上"的坐標系中的位置
+        // 但因為 Canvas 旋轉是順時針，這部分數學比較繞。
+
+        // 讓我們用最直觀的方法：重新計算
+        // 我們要畫一個箭頭，指向基地在地圖上的位置。
+        // 基地在地圖上的相對位置 (未旋轉前) 是 dx, dz
+        // 經過 playerRotation 旋轉後，它的位置會變。
+
+        // 我們使用剛剛計算的 baseX, baseZ (這是尚未旋轉的相對坐標)
+        // 透過旋轉矩陣手動旋轉它們，找出它們在 "螢幕空間" 的位置
+        const cos = Math.cos(playerRotation);
+        const sin = Math.sin(playerRotation);
+        const screenBaseX = baseX * cos - baseZ * sin;
+        const screenBaseZ = baseX * sin + baseZ * cos;
+
+        const arrowAngle = Math.atan2(screenBaseZ, screenBaseX);
+
+        const arrowDist = 65;
+        const arrowX = 75 + Math.cos(arrowAngle) * arrowDist;
+        const arrowY = 75 + Math.sin(arrowAngle) * arrowDist;
+
+        minimapCtx.save();
+        minimapCtx.translate(arrowX, arrowY);
+        minimapCtx.rotate(arrowAngle + Math.PI / 2); // 調整箭頭方向
+
+        minimapCtx.beginPath();
+        minimapCtx.moveTo(0, -5);
+        minimapCtx.lineTo(4, 5);
+        minimapCtx.lineTo(0, 3);
+        minimapCtx.lineTo(-4, 5);
+        minimapCtx.closePath();
+        minimapCtx.fillStyle = "#ffff00";
+        minimapCtx.fill();
+        minimapCtx.restore();
+
+        // 玩家點 (中心)
+        minimapCtx.fillStyle = "#ffffff";
+        minimapCtx.beginPath();
+        minimapCtx.arc(75, 75, 3, 0, Math.PI * 2);
+        minimapCtx.fill();
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (isGameActive && !isGameOver) {
+          const time = performance.now();
+          const delta = (time - prevTime) / 1000;
+
+          // 物理移動
+          velocity.x -= velocity.x * 10.0 * delta;
+          velocity.z -= velocity.z * 10.0 * delta;
+
+          direction.z = Number(moveForward) - Number(moveBackward);
+          direction.x = Number(moveRight) - Number(moveLeft);
+          direction.normalize();
+
+          const speed = isSprinting && stamina > 0 ? 80.0 : 30.0;
+
+          if (
+            isSprinting &&
+            (moveForward || moveBackward || moveLeft || moveRight)
+          ) {
+            stamina = Math.max(0, stamina - 20 * delta);
+          } else {
+            stamina = Math.min(100, stamina + 10 * delta);
+          }
+          document.getElementById("stamina-val").innerText =
+            Math.floor(stamina);
+          document.getElementById("stamina-bar").style.width = stamina + "%";
+          document.getElementById("stamina-bar").style.backgroundColor =
+            stamina < 20 ? "#ff3333" : "#33ff33";
+
+          const weightFactor = 1 - inventory * 0.1;
+          if (moveForward || moveBackward)
+            velocity.z -= direction.z * speed * weightFactor * delta;
+          if (moveLeft || moveRight)
+            velocity.x -= direction.x * speed * weightFactor * delta;
+
+          const intendedMoveX = -velocity.x * delta;
+          const intendedMoveZ = -velocity.z * delta;
+          const currentPos = camera.position.clone();
+
+          controls.moveRight(intendedMoveX);
+          if (checkCollision(camera.position)) {
+            camera.position.x = currentPos.x;
+            camera.position.z = currentPos.z;
+            velocity.x = 0;
+          } else {
+            currentPos.x = camera.position.x;
+            currentPos.z = camera.position.z;
+          }
+
+          controls.moveForward(intendedMoveZ);
+          if (checkCollision(camera.position)) {
+            camera.position.z = currentPos.z;
+            velocity.z = 0;
+          }
+
+          camera.position.y = 1.7;
+
+          // 怪物更新
+          updateEnemies(delta);
+
+          updateInteraction();
+          updateMinimap();
+
+          prevTime = time;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      function updateInteraction() {
+        raycaster.setFromCamera(new THREE.Vector2(), camera);
+        const intersects = raycaster.intersectObjects(scraps);
+        const interactionText = document.getElementById("interaction-text");
+        const distToBase = new THREE.Vector3(
+          camera.position.x,
+          0,
+          camera.position.z
+        ).distanceTo(new THREE.Vector3(0, 0, 0));
+
+        if (distToBase < baseRadius) {
+          targetedObject = null;
+          // 檢查是否可通關
+          if (totalScrapCollected >= goalScrap && inventory === 0) {
+            interactionText.style.display = "block";
+            interactionText.innerText = "按 [E] 完成任務";
+            interactionText.style.borderColor = "#00ffff";
+            interactionText.style.color = "#00ffff";
+          } else {
+            interactionText.style.display = "block";
+            interactionText.innerText =
+              inventory > 0 ? "[E] 存放數據" : "安全區域";
+            interactionText.style.borderColor = "#ffff00";
+            interactionText.style.color = "#ffff00";
+          }
+        } else if (
+          intersects.length > 0 &&
+          intersects[0].distance < interactionDistance
+        ) {
+          targetedObject = intersects[0].object;
+          interactionText.style.display = "block";
+          interactionText.innerText = "[E] 拾取數據";
+          interactionText.style.borderColor = "#33ff33";
+          interactionText.style.color = "#33ff33";
+        } else {
+          targetedObject = null;
+          interactionText.style.display = "none";
+        }
+      }
+
+      function onKeyDown(event) {
+        switch (event.code) {
+          case "ArrowUp":
+          case "KeyW":
+            moveForward = true;
+            break;
+          case "ArrowLeft":
+          case "KeyA":
+            moveLeft = true;
+            break;
+          case "ArrowDown":
+          case "KeyS":
+            moveBackward = true;
+            break;
+          case "ArrowRight":
+          case "KeyD":
+            moveRight = true;
+            break;
+          case "ShiftLeft":
+            isSprinting = true;
+            break;
+          case "KeyE":
+            tryInteract();
+            break;
+        }
+      }
+
+      function onKeyUp(event) {
+        switch (event.code) {
+          case "ArrowUp":
+          case "KeyW":
+            moveForward = false;
+            break;
+          case "ArrowLeft":
+          case "KeyA":
+            moveLeft = false;
+            break;
+          case "ArrowDown":
+          case "KeyS":
+            moveBackward = false;
+            break;
+          case "ArrowRight":
+          case "KeyD":
+            moveRight = false;
+            break;
+          case "ShiftLeft":
+            isSprinting = false;
+            break;
+        }
+      }
+
+      function tryInteract() {
+        if (!isGameActive || isGameOver) return;
+        const distToBase = new THREE.Vector3(
+          camera.position.x,
+          0,
+          camera.position.z
+        ).distanceTo(new THREE.Vector3(0, 0, 0));
+
+        if (distToBase < baseRadius) {
+          if (totalScrapCollected >= goalScrap && inventory === 0) {
+            triggerWin();
+            return;
+          }
+          if (inventory > 0) depositScrap();
+          else logMessage("無數據可上傳。");
+          return;
+        }
+
+        if (targetedObject) {
+          if (inventory < maxInventory) collectScrap(targetedObject);
+          else logMessage("儲存空間已滿！", true);
+        }
+      }
+
+      function collectScrap(object) {
+        scene.remove(object);
+        scraps.splice(scraps.indexOf(object), 1);
+        targetedObject = null;
+        inventory++;
+        document.getElementById("weight-val").innerText = inventory;
+        logMessage(`數據獲取成功。容量 (${inventory}/${maxInventory})`);
+      }
+
+      function depositScrap() {
+        totalScrapCollected += inventory;
+        logMessage(
+          `數據上傳完成: ${inventory} 單位。總進度: ${totalScrapCollected}`
+        );
+        inventory = 0;
+        document.getElementById("weight-val").innerText = inventory;
+        checkProgression();
+        generateScraps(2);
+      }
+
+      function checkProgression() {
+        const percent = Math.min((totalScrapCollected / goalScrap) * 100, 100);
+        document.getElementById("progress-text").innerText =
+          Math.floor(percent) + "%";
+        document.getElementById("game-progress-bar").style.width =
+          percent + "%";
+        scene.fog.density = 0.08 - 0.06 * (percent / 100);
+
+        storyLogs.forEach((log, index) => {
+          if (
+            totalScrapCollected >= log.threshold &&
+            currentLogIndex <= index
+          ) {
+            logMessage(log.text, index === storyLogs.length - 1);
+            currentLogIndex = index + 1;
+          }
+        });
+      }
+
+      function logMessage(msg, isWarning = false) {
+        const consoleDiv = document.getElementById("log-console");
+        const p = document.createElement("div");
+        p.innerHTML = `> ${msg}`;
+        p.style.marginBottom = "2px";
+        if (isWarning) p.classList.add("warning");
+        consoleDiv.appendChild(p);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    </script>
+  </body>
+</html>
